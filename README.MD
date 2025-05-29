@@ -6,7 +6,7 @@ This project fetches Cosmos staking delegations for a set of validators, stores 
 
 Repository Structure
 
-
+```
 S16TEST/
 ├── cmd/                            # Application entrypoints
 │   ├── collector/                  # Data collector service
@@ -30,7 +30,7 @@ S16TEST/
 ├── .env                            # Environment variables file (not committed to version control)
 ├── go.mod, go.sum                  # Go module dependencies
 └── README.md                       # Project documentation (this file)
-
+```
 
 
 ---
