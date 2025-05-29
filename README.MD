@@ -143,3 +143,47 @@ If `total_change_uatom` remains `0` for today, it means no change since snapshot
 
 ---
 
+###CURL
+
+```
+{
+  "info": {
+    "name": "Go Delegation Tracker",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Hourly Delegations",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/hourly",
+          "host": ["http://localhost:8080"],
+          "path": ["api","v1","validators","{{validator_address}}","delegations","hourly"]
+        }
+      }
+    },
+    {
+      "name": "Get Daily Delegations",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/daily",
+          "host": ["http://localhost:8080"],
+          "path": ["api","v1","validators","{{validator_address}}","delegations","daily"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "validator_address",
+      "value": "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn"
+    }
+  ]
+}
+
+```
+
