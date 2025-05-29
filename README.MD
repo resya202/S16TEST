@@ -175,12 +175,28 @@ If `total_change_uatom` remains `0` for today, it means no change since snapshot
           "path": ["api","v1","validators","{{validator_address}}","delegations","daily"]
         }
       }
+    },
+    {
+      "name": "Get Delegator History",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/validators/{{validator_address}}/delegator/{{delegator_address}}/history",
+          "host": ["http://localhost:8080"],
+          "path": ["api","v1","validators","{{validator_address}}","delegator","{{delegator_address}}","history"]
+        }
+      }
     }
   ],
   "variable": [
     {
       "key": "validator_address",
       "value": "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn"
+    },
+    {
+      "key": "delegator_address",
+      "value": "cosmos1qqy2q4mtmncqh6yw3dy5qp5e37vytadckzpw2j"
     }
   ]
 }
