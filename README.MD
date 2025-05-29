@@ -8,28 +8,29 @@ Repository Structure
 
 
 S16TEST/
-├── cmd/
-│   ├── collector/
-│   │   └── main.go       # Entrypoint for data collector
-│   └── api/
-│       └── main.go       # Entrypoint for HTTP API server
-├── internal/
-│   ├── config/
-│   │   └── config.go     # Load .env with Viper (POSTGRES_URL, COSMOS_API_BASE)
-│   ├── db/
-│   │   └── db.go         # Open GORM *gorm.DB connection helper
-│   ├── collector/
-│   │   └── collector.go  # FetchAndStoreAll & fetchAndStore implementations (NEED TO PUT VALIDATOR ADDRES YOU WANT TO FETCH)
-│   └── api/
-│       └── api.go        # RegisterRoutes, handlers for hourly & daily
-├── internal/model/
-│   └── delegation.go     # GORM model definitions (HourlyDelegation)
-├── migrations/
+├── cmd/                            # Application entrypoints
+│   ├── collector/                  # Data collector service
+│   │   └── main.go                 # Entrypoint for fetching & storing delegation data
+│   └── api/                        # API server service
+│       └── main.go                 # Entrypoint for HTTP API server
+├── internal/                       # Core application logic
+│   ├── config/                     # Configuration loader
+│   │   └── config.go               # Loads .env variables using Viper (POSTGRES_URL, COSMOS_API_BASE)
+│   ├── db/                         # Database utilities
+│   │   └── db.go                   # GORM DB connection helper
+│   ├── collector/                  # Delegation data fetch logic
+│   │   └── collector.go            # `FetchAndStoreAll`, `fetchAndStore` (specify validator addresses here)
+│   └── api/                        # API route logic
+│       └── api.go                  # Registers routes and handlers for hourly & daily data
+├── internal/model/                 # GORM model definitions
+│   └── delegation.go              # `HourlyDelegation` model
+├── migrations/                     # Database schema migrations
 │   ├── 20250527022316_init_schema.up.sql
-│   └── ...               # SQL for delegation_hourly
-├── .env                  # Environment variables (not committed)
-├── go.mod, go.sum        # Go module definitions
-└── README.md             # ← (This file)
+│   └── ...                         # Other migration files
+├── .env                            # Environment variables file (not committed to version control)
+├── go.mod, go.sum                  # Go module dependencies
+└── README.md                       # Project documentation (this file)
+
 
 
 ---
