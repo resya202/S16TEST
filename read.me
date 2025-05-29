@@ -1,0 +1,144 @@
+# Go Delegation Tracker
+
+This project fetches Cosmos staking delegations for a set of validators, stores hourly snapshots in PostgreSQL, and exposes a simple HTTP API (via Gin) to query both hourly and daily aggregated data.
+
+---
+
+Repository Structure
+
+
+S16TEST/
+├── cmd/
+│   ├── collector/
+│   │   └── main.go       # Entrypoint for data collector
+│   └── api/
+│       └── main.go       # Entrypoint for HTTP API server
+├── internal/
+│   ├── config/
+│   │   └── config.go     # Load .env with Viper (POSTGRES_URL, COSMOS_API_BASE)
+│   ├── db/
+│   │   └── db.go         # Open GORM *gorm.DB connection helper
+│   ├── collector/
+│   │   └── collector.go  # FetchAndStoreAll & fetchAndStore implementations (NEED TO PUT VALIDATOR ADDRES YOU WANT TO FETCH)
+│   └── api/
+│       └── api.go        # RegisterRoutes, handlers for hourly & daily
+├── internal/model/
+│   └── delegation.go     # GORM model definitions (HourlyDelegation)
+├── migrations/
+│   ├── 20250527022316_init_schema.up.sql
+│   └── ...               # SQL for delegation_hourly
+├── .env                  # Environment variables (not committed)
+├── go.mod, go.sum        # Go module definitions
+└── README.md             # ← (This file)
+
+
+---
+
+Environment Setup
+
+Create a `.env` file at the project root with the following keys:
+
+
+POSTGRES_URL=postgres://<db_user>:<db_pass>@localhost:5432/delegations?sslmode=disable
+COSMOS_API_BASE=https://cosmos-api.polkachu.com
+
+
+POSTGRES_URL**: full connection string to your `delegations` database.
+COSMOS_API_BASE**: base URL of the Cosmos REST API provider.
+
+Load them into your shell:
+
+bash
+export $(grep -v '^#' .env | xargs)
+
+
+---
+
+Database Migrations
+
+Ensure you have `migrate` CLI installed. Then:
+
+bash
+# Start Postgres (e.g. via Homebrew)
+brew services start postgresql
+
+# Create database
+psql -U $(whoami) -d postgres -c "CREATE DATABASE delegations;"
+
+# Apply migrations
+migrate -path migrations -database "$POSTGRES_URL" up
+
+
+This creates one table:
+
+sql
+-- delegation_hourly:
+--  id SERIAL PK, validator_addr, delegator_addr, timestamp (with tz), amount_uatom, change_uatom
+
+---
+
+ Running the Collector
+
+The collector fetches each validator’s delegations hourly, stores a snapshot in `delegation_hourly`, and can be extended to compute daily totals.
+
+bash
+go run cmd/collector/main.go
+
+
+Check the `delegation_hourly` table to confirm rows.
+
+---
+
+ Starting the API Server
+
+In another terminal:
+
+bash
+go run cmd/api/main.go
+
+
+By default, Gin listens on `:8080`.
+
+Endpoints
+
+Hourly Delegations
+
+  bash
+  curl http://localhost:8080/api/v1/validators/{validator_address}/delegations/hourly
+  
+
+Daily Aggregation**
+
+  bash
+  curl http://localhost:8080/api/v1/validators/{validator_address}/delegations/daily
+  
+
+  * Groups `delegation_hourly` by date and sums `change_uatom`.
+
+---
+
+ Testing with Postman
+
+1. Create a **new collection** (e.g. *Go Delegation Tracker*).
+2. Add two GET requests:
+
+   * **Get Hourly**
+
+     * URL: `http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/hourly`
+   * **Get Daily**
+
+     * URL: `http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/daily`
+3. Define an **Environment** variable: `validator_address` = your test val-oper.
+4. Send and inspect JSON responses.
+
+---
+
+ What To Expect
+
+* **Hourly**: an array of `HourlyDelegation` objects with raw snapshot rows.
+* **Daily**: an array of `{ validator_addr, delegator_addr, date, total_change_uatom }` showing the net change per day per delegator.
+
+If `total_change_uatom` remains `0` for today, it means no change since snapshots span a single date—so you may need to run multiple hourly snapshots across days to see a non-zero sum.
+
+---
+
