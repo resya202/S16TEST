@@ -21,7 +21,7 @@ S16TEST/
 │   ├── collector/                  # Delegation data fetch logic
 │   │   └── collector.go            # `FetchAndStoreAll`, `fetchAndStore` (specify validator addresses here)
 │   └── api/                        # API route logic
-│       └── api.go                  # Registers routes and handlers for hourly & daily data
+│       └── api.go                  # Registers routes and handlers for hourly & daily data, And also handle the rate limiting and traffic
 ├── internal/model/                 # GORM model definitions
 │   └── delegation.go              # `HourlyDelegation` model
 ├── migrations/                     # Database schema migrations
