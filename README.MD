@@ -59,7 +59,7 @@ Database Migrations
 
 Ensure you have `migrate` CLI installed. Then:
 
-bash
+
 # Start Postgres (e.g. via Homebrew)
 brew services start postgresql
 
@@ -82,7 +82,7 @@ sql
 
 The collector fetches each validator’s delegations hourly, stores a snapshot in `delegation_hourly`, and can be extended to compute daily totals.
 
-bash
+
 go run cmd/collector/main.go
 
 
@@ -100,48 +100,137 @@ go run cmd/api/main.go
 
 By default, Gin listens on `:8080`.
 
+Here’s the updated section including the **Delegator History** endpoint:
+
+---
+
 Endpoints
 
-Hourly Delegations
+**Hourly Delegations**
 
-  bash
-  curl http://localhost:8080/api/v1/validators/{validator_address}/delegations/hourly
-  
+```
+curl http://localhost:8080/api/v1/validators/{validator_address}/delegations/hourly
+```
 
-Daily Aggregation**
+Daily Aggregation
 
-  bash
-  curl http://localhost:8080/api/v1/validators/{validator_address}/delegations/daily
-  
+```
+curl http://localhost:8080/api/v1/validators/{validator_address}/delegations/daily
+```
 
-  * Groups `delegation_hourly` by date and sums `change_uatom`.
+*Groups `delegation_hourly` by date and sums `change_uatom`.*
 
----
+Delegator History
 
- Testing with Postman
+```
+curl http://localhost:8080/api/v1/validators/{validator_address}/delegator/{delegator_address}/history
+```
 
-1. Create a **new collection** (e.g. *Go Delegation Tracker*).
-2. Add two GET requests:
-
-   * **Get Hourly**
-
-     * URL: `http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/hourly`
-   * **Get Daily**
-
-     * URL: `http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/daily`
-3. Define an **Environment** variable: `validator_address` = your test val-oper.
-4. Send and inspect JSON responses.
+*Returns all hourly snapshots (with `amount_uatom` and `change_uatom`) for the given validator + delegator, ordered by timestamp.*
 
 ---
 
- What To Expect
+Testing with Postman
 
-* **Hourly**: an array of `HourlyDelegation` objects with raw snapshot rows.
-* **Daily**: an array of `{ validator_addr, delegator_addr, date, total_change_uatom }` showing the net change per day per delegator.
+1. Create a new collection (e.g. *Go Delegation Tracker*).
 
-If `total_change_uatom` remains `0` for today, it means no change since snapshots span a single date—so you may need to run multiple hourly snapshots across days to see a non-zero sum.
+2. Add three GET requests:
+
+   * Get Hourly Delegations
+
+     * Name: Get Hourly
+     * URL:
+
+       ```
+       http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/hourly
+       ```
+   * Get Daily Delegations
+
+     * Name: Get Daily
+     * URL:
+
+       ```
+       http://localhost:8080/api/v1/validators/{{validator_address}}/delegations/daily
+       ```
+   * Get Delegator History
+
+     * Name: Get History
+     * URL:
+
+       ```
+       http://localhost:8080/api/v1/validators/{{validator_address}}/delegator/{{delegator_address}}/history
+       ```
+
+3. Define Environment Variables in Postman:
+```
+
+   | Key                 | Initial Value                                                                |
+   | ------------------- | ---------------------------------------------------------------------------- |
+   | `validator_address` | `cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn`                       |
+   | `delegator_address` | (pick a `delegator_addr` from your hourly data, e.g. `cosmos1testdelegator`) |
+```
+4. Send each request and inspect the JSON response.
 
 ---
+
+What To Expect
+
+* Hourly:
+
+  ```
+  [
+    {
+      "ID": 1,
+      "ValidatorAddr": "...",
+      "DelegatorAddr": "...",
+      "Timestamp": "2025-05-30T05:30:20.26286+07:00",
+      "AmountUAtom": 30000000,
+      "ChangeUAtom": 30000000
+    },
+    …
+  ]
+  ```
+
+* Daily:
+
+  ```
+  [
+    {
+      "validator_addr":"...",
+      "delegator_addr":"...",
+      "date":"2025-05-30",
+      "total_change_uatom":800
+    },
+    …
+  ]
+  ```
+
+* History:
+
+  ```
+  [
+    {
+      "ID": 1,
+      "ValidatorAddr": "...",
+      "DelegatorAddr": "...",
+      "Timestamp": "2025-05-30T08:00:00+07:00",
+      "AmountUAtom": 500,
+      "ChangeUAtom": 500
+    },
+    {
+      "ID": 2,
+      "ValidatorAddr": "...",
+      "DelegatorAddr": "...",
+      "Timestamp": "2025-05-30T12:00:00+07:00",
+      "AmountUAtom": 800,
+      "ChangeUAtom": 300
+    },
+    …
+  ]
+  ```
+
+If you see `total_change_uatom: 0` in **Daily**, it means all snapshots that date had zero-delta; run the collector multiple times or insert test rows as shown earlier to observe non-zero aggregation.
+
 
 ###CURL
 
